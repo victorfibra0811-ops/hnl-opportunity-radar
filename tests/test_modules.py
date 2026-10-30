@@ -27,6 +27,12 @@ class CatalogTests(unittest.TestCase):
    p.write_text(json.dumps(self.record(stage="planning",evidence_excerpt="new text"))+"\n",encoding="utf8")
    import_research(db,p)
    self.assertEqual(db.execute("SELECT stage,evidence FROM projects").fetchone(),("mobilizing","https://prime.example/crew-request"))
+ def test_distinct_project_ids_and_tracking_removed(self):
+  from catalog.app import canonical
+  self.assertEqual(canonical("https://example.com/project?id=123&utm_source=abc"),
+                   "https://example.com/project?id=123")
+  self.assertNotEqual(canonical("https://example.com/project?id=123"),
+                      canonical("https://example.com/project?id=456"))
  def test_unverified_sources_not_one_company(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/"leads.jsonl"
