@@ -17,7 +17,12 @@ def import_research(db,filename):
     if not r.get(key):raise ValueError('Missing '+key)
    stage=r.get('stage','unknown')
    if stage not in STAGES:raise ValueError('Invalid stage')
-   website=r.get('website',''); identity=urlsplit(website).netloc.lower() if website else ''.join(c for c in r['company_name'].lower() if c.isalnum())
+   website=r.get('website','')
+   if r['company_name'].startswith('Unverified'):
+    # News search source is not the contractor. Keep an isolated placeholder per lead.
+    identity='unverified:'+r['source_url']
+   else:
+    identity=urlsplit(website).netloc.lower() if website else ''.join(c for c in r['company_name'].lower() if c.isalnum())
    cid='org_'+hashlib.sha256(identity.encode()).hexdigest()[:16]
    source=r['source_url'];p=urlsplit(source)
    if p.scheme not in ('http','https') or not p.netloc:raise ValueError('Invalid source URL')
