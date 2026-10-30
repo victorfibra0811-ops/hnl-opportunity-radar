@@ -1,1 +1,0 @@
-"""Cloud PostgreSQL import adapters."""
