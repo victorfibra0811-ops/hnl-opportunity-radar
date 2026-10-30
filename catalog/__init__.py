@@ -1,1 +1,0 @@
-"""HNL project catalog package."""
