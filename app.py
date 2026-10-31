@@ -55,8 +55,20 @@ try:
         with conn.cursor() as cur:
             cur.execute("SELECT id,project,company,state,city,service,stage,source_url,evidence,published_at,score,pipeline,updated_at FROM leads ORDER BY updated_at DESC LIMIT 2000")
             leads=cur.fetchall()
-except psycopg.Error:
-    st.error("Database connection failed. Check Streamlit secrets and Neon status.")
+except psycopg.Error as exc:
+    state=getattr(exc, "sqlstate", None)
+    if state in ("28P01","28000"):
+        reason="A senha ou o usuário do banco foi rejeitado pelo Neon."
+    elif state=="3D000":
+        reason="O nome do banco de dados não foi encontrado no servidor."
+    elif state=="42P01":
+        reason="A conexão abriu, mas a tabela leads não foi encontrada."
+    elif isinstance(exc, psycopg.OperationalError):
+        reason="Falha de autenticação, rede ou conexão. Confirme que DATABASE_URL foi copiada novamente do Neon após a última redefinição de senha."
+    else:
+        reason="Erro ao consultar o PostgreSQL. Verifique o esquema e a configuração do banco."
+    st.error("Database connection failed.")
+    st.info(reason)
     st.stop()
 
 df=pd.DataFrame(leads)
