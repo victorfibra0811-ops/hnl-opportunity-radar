@@ -9,6 +9,8 @@ from psycopg.rows import dict_row
 
 st.set_page_config(page_title="HNL Opportunity Radar",layout="wide")
 st.title("HNL Opportunity Radar")
+st.caption("Kentucky | Fibra aérea e subterrânea")
+st.markdown("""<style>.block-container{max-width:1500px;padding-top:1.5rem} [data-testid="stMetric"]{background:#192d39;border-radius:12px;padding:14px} .stButton button[kind="primary"]{background:#e56a33}</style>""",unsafe_allow_html=True)
 st.caption("Execution-ready B2B fiber projects • Shared CRM")
 
 def config(name):
