@@ -1,5 +1,20 @@
 [
   {
+    "id": "KY-ERVIN-20261031",
+    "project": "Kenergy / Conexon — subcontractor onboarding",
+    "company": "Ervin Cable Construction",
+    "state": "KY",
+    "city": "Sturgis",
+    "service": "aerial, underground, FTTH, splicing",
+    "stage": "VENDOR_REGISTRATION",
+    "source_url": "https://ervincable.com/subcontractors/",
+    "evidence": "Public partner registration; no current crew slot verified",
+    "published_at": null,
+    "score": 85,
+    "pipeline": "NEW",
+    "updated_at": "2026-10-31"
+  },
+  {
     "id": "HNL001",
     "project": "ElectriCom",
     "company": "ElectriCom",
