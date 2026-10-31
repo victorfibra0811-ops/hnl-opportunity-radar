@@ -21,9 +21,9 @@ STRATEGIC = [
  ("KentuckyWired contracts","https://kentuckywired.ky.gov/LastMilePartner/Pages/KYW%20Contracts.aspx"),
  ("Kentucky Power pole attachments","https://www.kentuckypower.com/business/b2b/pole-attachment/"),
 ]
-CREW = re.compile(r"\\b(subcontractors?|contractors?|crews?|1099|corp.to.corp|c2c)\\b",re.I)
-SERVICE = re.compile(r"\\b(fiber|fibre|splicing|aerial|underground|ftth|drop bury|osp|boring)\\b",re.I)
-EXCLUDED = re.compile(r"\\b(in.house only|w-?2 only|employee only|sales|door.to.door)\\b",re.I)
+CREW = re.compile(r"\b(subcontractors?|contractors?|crews?|1099|corp.to.corp|c2c)\b",re.I)
+SERVICE = re.compile(r"\b(fiber|fibre|splicing|aerial|underground|ftth|drop bury|osp|boring)\b",re.I)
+EXCLUDED = re.compile(r"\b(in.house only|w-?2 only|employee only|sales|door.to.door)\b",re.I)
 
 def fetch(url):
     from urllib.parse import urlsplit
@@ -54,7 +54,7 @@ def discover():
             if "/jobs/" not in href or href.split("?")[0].rstrip("/")==url.split("?")[0].rstrip("/"):continue
             context=" ".join(a.parent.get_text(" ",strip=True).split())[:400]
             # Only consider an explicit KY designation, not nationwide results or keyword-only company pages.
-            if not re.search(r"\\b(Kentucky|KY)\\b",context,re.I):continue
+            if not re.search(r"\b(Kentucky|KY)\b",context,re.I):continue
             if EXCLUDED.search(title) or not SERVICE.search(title):continue
             results.append({"id":"KY-"+hashlib.sha256(href.encode()).hexdigest()[:18],
              "project":title[:200],"company":name,"state":"KY","service":title[:200],
