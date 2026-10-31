@@ -119,7 +119,29 @@ if page=="Opportunities":
         filtered=df.copy()
         if state!="All":filtered=filtered[filtered.state==state]
         if category!="All":filtered=filtered[filtered.service==category]
-        st.dataframe(filtered,hide_index=True,use_container_width=True)
+        status_names={"VENDOR_REGISTRATION":"Cadastro de fornecedor","AWARDED_OR_IDENTIFIED_UNVERIFIED":"Projeto identificado","UNVERIFIED_CREW_REQUEST":"Demanda a confirmar","UNVERIFIED":"Em investigação"}
+        view=filtered.copy()
+        view["Empresa"]=view["company"].fillna("Não identificada")
+        view["Projeto / oportunidade"]=view["project"].fillna("")
+        view["Tipo de fibra"]=view["service"].fillna("")
+        view["Situação"]=view["stage"].map(lambda x:status_names.get(x,"Em investigação"))
+        st.dataframe(view[["Empresa","Projeto / oportunidade","Tipo de fibra","Situação"]],hide_index=True,use_container_width=True)
+        st.subheader("Contato comercial")
+        selection=st.selectbox("Escolha uma oportunidade",filtered.index.tolist(),format_func=lambda i: str(filtered.loc[i,"company"] or filtered.loc[i,"project"]))
+        chosen=filtered.loc[selection]
+        contact_url=None
+        if str(chosen.get("company") or "").lower().startswith("ervin"):
+            contact_url="https://ervincable.com/subcontractors/"
+        elif str(chosen.get("company") or "").lower().startswith("electricom"):
+            contact_url="https://www.electricomllc.com/become-a-subcontractor"
+        elif str(chosen.get("company") or "").lower().startswith("verita"):
+            contact_url="https://veritacorp.com/subcontractors/"
+        if contact_url:
+            st.link_button("Abrir cadastro de fornecedor",contact_url)
+        else:
+            st.info("Contato direto não verificado. Consulte a fonte original para identificar o responsável.")
+        if chosen.get("source_url"):
+            st.link_button("Consultar fonte original",str(chosen["source_url"]))
         ident=st.selectbox("Update opportunity",filtered.id.tolist(),format_func=lambda i: next((str(x) for x in filtered.loc[filtered.id==i,"project"]),i)) if db_online and not filtered.empty else None
         if ident:
             stages=["NEW","QUALIFIED","CONTACTED","REPLIED","NEGOTIATING","PROPOSAL","WON","LOST"]
