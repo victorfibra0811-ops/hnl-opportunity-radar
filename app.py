@@ -114,8 +114,8 @@ if page=="Opportunities":
     if df.empty:
         st.info("No leads in the shared cloud database yet. The scheduled collector must be configured and run.")
     else:
-        state=st.selectbox("State",["All"]+sorted(x for x in df.state.dropna().unique()))
-        category=st.selectbox("Service",["All"]+sorted(x for x in df.service.dropna().unique()))
+        state=st.selectbox("Estado",["KY","All"]+sorted(x for x in df.state.dropna().unique() if x not in ("KY","All")))
+        category=st.selectbox("Tipo de obra",["All"]+sorted(x for x in df.service.dropna().unique()))
         filtered=df.copy()
         if state!="All":filtered=filtered[filtered.state==state]
         if category!="All":filtered=filtered[filtered.service==category]
