@@ -67,8 +67,32 @@ except psycopg.Error as exc:
         reason="Falha de autenticação, rede ou conexão. Confirme que DATABASE_URL foi copiada novamente do Neon após a última redefinição de senha."
     else:
         reason="Erro ao consultar o PostgreSQL. Verifique o esquema e a configuração do banco."
+    # Show only a restricted error category. Never echo psycopg's raw exception
+    # because some drivers append connection parameters to error messages.
+    raw = str(exc).lower()
+    if "password authentication failed" in raw:
+        diagnostic = "AUTH_PASSWORD_REJECTED"
+    elif "no pg_hba.conf entry" in raw:
+        diagnostic = "PG_HBA_OR_SSL_POLICY"
+    elif "name or service not known" in raw or "could not translate host name" in raw:
+        diagnostic = "DNS_HOST_NOT_FOUND"
+    elif "connection timed out" in raw or "timeout expired" in raw:
+        diagnostic = "NETWORK_TIMEOUT"
+    elif "connection refused" in raw:
+        diagnostic = "NETWORK_REFUSED"
+    elif "certificate verify failed" in raw or "ssl" in raw and "failed" in raw:
+        diagnostic = "SSL_CONNECTION_ERROR"
+    elif "role" in raw and "does not exist" in raw:
+        diagnostic = "DATABASE_ROLE_MISSING"
+    elif "database" in raw and "does not exist" in raw:
+        diagnostic = "DATABASE_NAME_MISSING"
+    elif "relation" in raw and "does not exist" in raw:
+        diagnostic = "DATABASE_SCHEMA_MISSING"
+    else:
+        diagnostic = "OTHER_DATABASE_ERROR"
     st.error("Database connection failed.")
     st.info(reason)
+    st.code(f"Diagnosis: {diagnostic} | SQLSTATE: {state or 'none'} | Exception: {type(exc).__name__}")
     st.stop()
 
 df=pd.DataFrame(leads)
