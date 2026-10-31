@@ -1,5 +1,6 @@
 """HNL shared cloud CRM. Cloud DB and individual credentials are required."""
-import hashlib, hmac, os
+import hashlib, hmac, os, json
+from pathlib import Path
 from datetime import date
 import streamlit as st
 import pandas as pd
@@ -50,6 +51,7 @@ with st.sidebar:
     page=st.radio("View",["Opportunities","CRM activity","Reports"])
 def connect():
     return psycopg.connect(url, row_factory=dict_row, connect_timeout=15)
+db_online=True
 try:
     with connect() as conn:
         with conn.cursor() as cur:
@@ -93,11 +95,20 @@ except psycopg.Error as exc:
     st.error("Database connection failed.")
     st.info(reason)
     st.code(f"Diagnosis: {diagnostic} | SQLSTATE: {state or 'none'} | Exception: {type(exc).__name__}")
-    st.stop()
+    db_online=False
+    snapshot=Path(__file__).parent / "data" / "public_prospect_snapshot.json"
+    try:
+        leads=json.loads(snapshot.read_text(encoding="utf-8"))
+        st.warning("MODO CONTINGÊNCIA: prospects públicos de 31/10/2026, não confirmados. CRM somente leitura até o Neon reconectar.")
+    except (OSError, ValueError):
+        st.error("Snapshot indisponível.")
+        st.stop()
 
 df=pd.DataFrame(leads)
 if page=="Opportunities":
-    st.metric("Stored leads",len(df))
+    st.metric("Prospects exibidos" if not db_online else "Stored leads",len(df))
+    if not db_online:
+        st.caption("Fonte: cópia pública de prospecção de 31/10/2026. Validação comercial pendente.")
     if df.empty:
         st.info("No leads in the shared cloud database yet. The scheduled collector must be configured and run.")
     else:
@@ -107,7 +118,7 @@ if page=="Opportunities":
         if state!="All":filtered=filtered[filtered.state==state]
         if category!="All":filtered=filtered[filtered.service==category]
         st.dataframe(filtered,hide_index=True,use_container_width=True)
-        ident=st.selectbox("Update opportunity",filtered.id.tolist(),format_func=lambda i: next((str(x) for x in filtered.loc[filtered.id==i,"project"]),i)) if not filtered.empty else None
+        ident=st.selectbox("Update opportunity",filtered.id.tolist(),format_func=lambda i: next((str(x) for x in filtered.loc[filtered.id==i,"project"]),i)) if db_online and not filtered.empty else None
         if ident:
             stages=["NEW","QUALIFIED","CONTACTED","REPLIED","NEGOTIATING","PROPOSAL","WON","LOST"]
             with st.form("update"):
@@ -125,6 +136,8 @@ if page=="Opportunities":
                                 cur.execute("INSERT INTO activities(lead_id,actor,action,detail,next_followup) VALUES(%s,%s,%s,%s,%s)",(ident,st.session_state["user"],action,detail,next_date))
                         st.success("Saved to shared CRM")
                         st.rerun()
+elif page=="CRM activity" and not db_online:
+    st.warning("CRM indisponível em modo contingência. Nenhuma alteração será salva.")
 elif page=="CRM activity":
     with connect() as conn:
         with conn.cursor() as cur:
