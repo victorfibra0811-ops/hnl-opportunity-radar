@@ -13,6 +13,7 @@ INDEXES = [
  ("CABL Aerial","https://www.cabl.com/jobs/aerial-construction/?noscript=y"),
  ("CABL Underground","https://www.cabl.com/jobs/underground-construction/?noscript=y"),
  ("CABL Drop Bury","https://www.cabl.com/jobs/drop-bury/?noscript=y"),
+ ("CABL Telecom Construction","https://www.cabl.com/jobs/telecom-construction/?noscript=y"),
 ]
 STRATEGIC = [
  ("Ervin Cable partners","https://ervincable.com/subcontractors/"),
@@ -20,8 +21,12 @@ STRATEGIC = [
  ("Kenergy contractor FAQ","https://www.kenergycorp.com/internet-faqs/"),
  ("KentuckyWired contracts","https://kentuckywired.ky.gov/LastMilePartner/Pages/KYW%20Contracts.aspx"),
  ("Kentucky Power pole attachments","https://www.kentuckypower.com/business/b2b/pole-attachment/"),
+ ("Conexon Connect","https://conexonconnect.com/"),
+ ("Ervin Cable","https://ervincable.com/"),
 ]
 CREW = re.compile(r"\b(subcontractors?|contractors?|crews?|1099|corp.to.corp|c2c)\b",re.I)
+AERIAL = re.compile(r"\b(aerial|overhead|pole attachments?|pole line|pole transfer|pole replacement|make.ready|strand|lashing|lasher|adss|messenger|bucket truck|line construction|fiber splic(?:ing|ers?))\b",re.I)
+INDIVIDUAL = re.compile(r"\b(technicians? wanted|installer position|hourly wage|full.time employee|w-?2|apply for (?:a )?job)\b",re.I)
 SERVICE = re.compile(r"\b(fiber|fibre|splicing|aerial|underground|ftth|drop bury|osp|boring)\b",re.I)
 EXCLUDED = re.compile(r"\b(in.house only|w-?2 only|employee only|sales|door.to.door)\b",re.I)
 
@@ -55,12 +60,14 @@ def discover():
             context=" ".join(a.parent.get_text(" ",strip=True).split())[:400]
             # Only consider an explicit KY designation, not nationwide results or keyword-only company pages.
             if not re.search(r"\b(Kentucky|KY)\b",context,re.I):continue
-            if EXCLUDED.search(title) or not SERVICE.search(title):continue
+            if EXCLUDED.search(title) or INDIVIDUAL.search(title) or not (SERVICE.search(title) or AERIAL.search(title)):continue
+            if not CREW.search(title+" "+context):continue
+            aerial=bool(AERIAL.search(title+" "+context))
             results.append({"id":"KY-"+hashlib.sha256(href.encode()).hexdigest()[:18],
-             "project":title[:200],"company":name,"state":"KY","service":title[:200],
-             "stage":"UNVERIFIED_CREW_REQUEST" if CREW.search(title) else "UNVERIFIED",
+             "project":title[:200],"company":name,"state":"KY","service":("aerial fiber / pole work" if aerial else title[:200]),
+             "stage":"UNVERIFIED_CREW_REQUEST",
              "source_url":href,"source_name":name,
-             "evidence":context,"pipeline":"RESEARCH","score":0,
+             "evidence":context,"pipeline":"RESEARCH","score":(40 if aerial else 0),
              "first_seen":now,"last_seen":now,"updated_at":now})
     return list({r["source_url"]:r for r in results}.values()),checks
 
