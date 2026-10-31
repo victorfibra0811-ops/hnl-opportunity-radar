@@ -1,5 +1,5 @@
 """Conservative scheduled public-source discovery. Not a substitute for verified open contracts."""
-import json, re, sys, time
+import json, re, sys, time, os, hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
@@ -44,6 +44,31 @@ def allowed(url):
         return robots.can_fetch(UA,url)
     except Exception:
         return False
+def persist_candidates(records, database_url):
+    """Persist unverified source observations idempotently; never claim confirmed work."""
+    if not database_url:
+        return 0
+    import psycopg
+    count=0
+    with psycopg.connect(database_url,connect_timeout=20) as conn:
+        with conn.cursor() as cur:
+            for r in records:
+                if r.get("status")!="candidate_unverified":
+                    continue
+                ident="source-"+hashlib.sha256(r["url"].encode()).hexdigest()[:24]
+                cur.execute(
+                  """INSERT INTO leads(id,project,company,state,service,stage,source_url,source_name,
+                  evidence,score,pipeline,first_seen,last_seen,updated_at)
+                  VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                  ON CONFLICT(id) DO UPDATE SET
+                    last_seen=EXCLUDED.last_seen,updated_at=EXCLUDED.updated_at
+                  """,
+                  (ident,r["source"],r["source"],"UNKNOWN",", ".join(r.get("services",[])),
+                   "UNVERIFIED",r["url"],r["source"],"Public source-level B2B signal; project and crew availability not confirmed",
+                   0,"RESEARCH",r["checked_at"],r["checked_at"],r["checked_at"]))
+                count+=1
+    return count
+
 def run():
     records=[]
     for name,url in SOURCES:
@@ -67,6 +92,7 @@ def run():
     folder=Path("out")
     folder.mkdir(exist_ok=True)
     (folder/"latest-discovery.json").write_text(json.dumps(records,indent=2),encoding="utf-8")
-    print(json.dumps({"checked":len(records),"candidates":sum(x["status"]=="candidate_unverified" for x in records)},indent=2))
+    stored=persist_candidates(records,os.environ.get("DATABASE_URL",""))
+    print(json.dumps({"checked":len(records),"candidates":sum(x["status"]=="candidate_unverified" for x in records),"persisted":stored},indent=2))
 if __name__=="__main__":
     run()
