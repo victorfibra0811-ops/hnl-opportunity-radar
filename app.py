@@ -10,7 +10,7 @@ from psycopg.rows import dict_row
 st.set_page_config(page_title="HNL Opportunity Radar",layout="wide")
 st.title("HNL Opportunity Radar")
 st.caption("Kentucky | Fibra aérea e subterrânea")
-st.markdown("""<style>.block-container{max-width:1500px;padding-top:1.5rem} [data-testid="stMetric"]{background:#192d39;border-radius:12px;padding:14px} .stButton button[kind="primary"]{background:#e56a33}</style>""",unsafe_allow_html=True)
+st.markdown("""<style>.block-container{max-width:1450px;padding-top:2rem;padding-bottom:3rem}h1{font-weight:750;letter-spacing:-.04em}h2,h3{letter-spacing:-.025em}[data-testid="stMetric"]{background:rgba(107,139,156,.10);border:1px solid rgba(120,145,160,.22);border-radius:13px;padding:16px}[data-testid="stDataFrame"]{border:1px solid rgba(120,145,160,.25);border-radius:12px;overflow:hidden}[data-testid="stForm"]{border-radius:14px;border:1px solid rgba(120,145,160,.26)}div.stButton>button,div.stLinkButton>a{border-radius:9px}div.stButton>button[kind="primary"]{background:#dd7541;border-color:#dd7541}div[data-baseweb="select"]>div{border-radius:9px}section[data-testid="stSidebar"]{border-right:1px solid rgba(120,145,160,.25)}</style>""",unsafe_allow_html=True)
 st.caption("Execution-ready B2B fiber projects • Shared CRM")
 
 def config(name):
