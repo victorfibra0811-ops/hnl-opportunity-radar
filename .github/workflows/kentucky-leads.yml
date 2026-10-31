@@ -1,0 +1,29 @@
+name: Kentucky fiber lead monitor
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 13 * * *'
+permissions:
+  contents: read
+jobs:
+  kentucky:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install collector dependencies
+        run: pip install requests beautifulsoup4 'psycopg[binary]'
+      - name: Discover Kentucky opportunities and upsert to Neon
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python -m radar.kentucky
+      - name: Archive discovery audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kentucky-discovery
+          path: out/kentucky-discovery.json
+          if-no-files-found: ignore
